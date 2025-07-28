@@ -1,6 +1,26 @@
 {
     "files.associations": {
         "queue.h": "c",
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "serial.h": "c",
+        "led.h": "c",
+        "globals.h": "c",
+        "bluetooth.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "cjson.h": "c",
+        "oled.h": "c",
+        "timer.h": "c",
+        "ultrasonic.h": "c",
+        "wifi.h": "c",
+        "tracking.h": "c",
+        "dht11.h": "c",
+        "smartcar.h": "c",
+        "delay.h": "c",
+        "ringbuff.h": "c",
+        "servo.h": "c",
+        "voiceidentify.h": "c",
+        "ir_nec.h": "c"
     }
 }
