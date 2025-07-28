@@ -33,7 +33,6 @@
 
 /* 创建任务句柄 */
 TaskHandle_t AppTaskCreate_Handle = NULL;
-TaskHandle_t LED_Task_Handle = NULL;
 TaskHandle_t WIFI_Task_Handle = NULL;
 TaskHandle_t IR_Task_Handle = NULL;
 TaskHandle_t Bluetooth_Task_Handle = NULL;
@@ -76,8 +75,6 @@ char str[16]; // 定义一个长度为16的字符数组作为字符串
 ***********************************************************
 */
 void AppTaskCreate(void);/* 用于创建任务 */
-
-void LED_Task(void * pvParameters);/* LED_Task任务实现 */
 
 // WIFI
 void WIFI_Task(void * pvParameters);
@@ -170,26 +167,11 @@ void AppTaskCreate(void)
 	taskENTER_CRITICAL();//进入临界区
 	
 	/* 创建WIFI_Task任务 */
-	xReturn = xTaskCreate((TaskFunction_t)LED_Task,//任务函数
-	(const char*)"LED_Task",//任务名称
-	(uint16_t)STACK_SIZE,//任务堆栈大小
-	(void*)NULL,//传递给任务函数的参数
-	(UBaseType_t)1,//任务优先级
-	(TaskHandle_t*)&LED_Task_Handle);//任务控制块指针
-	if(pdPASS == xReturn)
-	{
-		printf("LED_Task任务创建成功！\r\n");
-	}
-	else
-	{
-		printf("LED_Task任务创建失败！\r\n");
-	}
-	
 	xReturn = xTaskCreate((TaskFunction_t)WIFI_Task,//任务函数
 	(const char*)"WIFI_Task",//任务名称
 	(uint16_t)STACK_SIZE,//任务堆栈大小
 	(void*)NULL,//传递给任务函数的参数
-	(UBaseType_t)2,//任务优先级
+	(UBaseType_t)3,//任务优先级
 	(TaskHandle_t*)&WIFI_Task_Handle);//任务控制块指针
 	if(pdPASS == xReturn)
 	{
@@ -204,7 +186,7 @@ void AppTaskCreate(void)
 	(const char*)"IR_Task",//任务名称
 	(uint16_t)STACK_SIZE,//任务堆栈大小
 	(void*)NULL,//传递给任务函数的参数
-	(UBaseType_t)3,//任务优先级
+	(UBaseType_t)2,//任务优先级
 	(TaskHandle_t*)&IR_Task_Handle);//任务控制块指针
 	if(pdPASS == xReturn)
 	{
@@ -247,7 +229,7 @@ void AppTaskCreate(void)
 
 	xReturn = xTaskCreate((TaskFunction_t)Ultrasonic_Distance_Task,//任务函数
 	(const char*)"Ultrasonic_Distance_Task",//任务名称
-	(uint16_t)512,//任务堆栈大小
+	(uint16_t)STACK_SIZE,//任务堆栈大小
 	(void*)NULL,//传递给任务函数的参数
 	(UBaseType_t)6,//任务优先级
 	(TaskHandle_t*)&Ultrasonic_Distance_Task_Handle);//任务控制块指针
@@ -278,21 +260,6 @@ void AppTaskCreate(void)
 	vTaskDelete(AppTaskCreate_Handle);//删除AppTaskCreate任务
 
 	taskEXIT_CRITICAL();//推出临界区
-}
-
-/*
-@函数名：LED_Task
-@功能说明：LED_Task任务主体
-@参数：
-@返回值：无
-*/
-void LED_Task(void * pvParameters)
-{
-	while(1)
-	{
-		LED1_ON;
-		vTaskDelay(20);//延时20个tick
-	}
 }
 
 /* 所有板子上的初始化均可放在这个函数里 */

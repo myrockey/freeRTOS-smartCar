@@ -2,6 +2,8 @@
 #include "IR_Nec.h"
 #include "Timer.h"
 #include "globals.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /* 全局变量 */
 static volatile uint8_t  ir_timer_flag = 0;//定时器开始计数标志
@@ -172,6 +174,11 @@ uint32_t GetTimerCountForIR(void)
 //输入捕获中断函数
 void IR_TIM_CC_IRQHandler(void)
 {
+    // uint32_t ulReturn;
+    // BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    // /* 进入临界段 */
+    // ulReturn = taskENTER_CRITICAL_FROM_ISR();
+
     //下降沿捕获触发中断
 	if(TIM_GetITStatus(IR_TIM,TIM_IT_CC1)!=RESET)
     {
@@ -244,4 +251,7 @@ void IR_TIM_CC_IRQHandler(void)
 
         TIM_ClearITPendingBit(IR_TIM,TIM_IT_CC1);
     }
+        
+    /* 退出临界段 */
+    // taskEXIT_CRITICAL_FROM_ISR(ulReturn);
 }
