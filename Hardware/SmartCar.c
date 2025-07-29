@@ -13,6 +13,22 @@ void SmartCar_Init(void)
 	Motor_Init();
 }
 
+//设置小车速度0-100
+void Car_SetSpeed(uint8_t percent)
+{
+	Speed = percent;
+}
+
+void Car_SetLeftSpeed(int8_t speed)
+{
+	MotorLeft_SetSpeed(speed);
+}
+
+void Car_SetRightSpeed(int8_t speed)
+{
+	MotorRight_SetSpeed(speed);
+}
+
 //向前
 void Move_Forward(void)
 {
@@ -30,6 +46,7 @@ void Move_Backward(void)
 //停止
 void Car_Stop(void)
 {
+	Car_SetSpeed(50);
 	MotorLeft_SetSpeed(0);
 	MotorRight_SetSpeed(0);
 }

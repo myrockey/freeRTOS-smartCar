@@ -156,19 +156,19 @@
 #define configIDLE_SHOULD_YIELD					1           
 
 //启用队列
-#define configUSE_QUEUE_SETS					  0    
+#define configUSE_QUEUE_SETS					  1    
 
 //开启任务通知功能，默认开启
 #define configUSE_TASK_NOTIFICATIONS    1   
 
 //使用互斥信号量
-#define configUSE_MUTEXES						    0    
+#define configUSE_MUTEXES						    1    
 
 //使用递归互斥信号量                                            
-#define configUSE_RECURSIVE_MUTEXES			0   
+#define configUSE_RECURSIVE_MUTEXES			1   
 
 //为1时使用计数信号量
-#define configUSE_COUNTING_SEMAPHORES		0
+#define configUSE_COUNTING_SEMAPHORES		1
 
 /* 设置可以注册的信号量和消息队列个数 */
 #define configQUEUE_REGISTRY_SIZE				10                                 
@@ -252,7 +252,7 @@
                 FreeRTOS与软件定时器有关的配置选项      
 **********************************************************************/
  //启用软件定时器
-#define configUSE_TIMERS				            0                              
+#define configUSE_TIMERS				            1                              
 //软件定时器优先级
 #define configTIMER_TASK_PRIORITY		        (configMAX_PRIORITIES-1)        
 //软件定时器队列长度
@@ -272,7 +272,7 @@
 #define INCLUDE_vTaskDelayUntil			         1
 #define INCLUDE_vTaskDelay				           1
 #define INCLUDE_eTaskGetState			           1
-#define INCLUDE_xTimerPendFunctionCall	     0
+#define INCLUDE_xTimerPendFunctionCall	     1
 //#define INCLUDE_xTaskGetCurrentTaskHandle       1
 //#define INCLUDE_uxTaskGetStackHighWaterMark     0
 //#define INCLUDE_xTaskGetIdleTaskHandle          0

@@ -12,7 +12,8 @@
 #define   L   GPIO_ReadInputDataBit(GPIOB, GPIO_PIN_L) 
 
 void Tracking_Init(void);
-void Tracking_Run(void);
+uint8_t Tracking_Read(void);
+void Tracking_Run(uint8_t line);
 
 #endif
 

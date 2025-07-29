@@ -4,8 +4,6 @@
 #include "SmartCar.h"
 #include "Delay.h"
 
-extern int distance;//距障碍物距离
-
 /*---------------- 仅需新增的全局变量 ----------------*/
 static volatile int last_valid_distance = 0;   // 保存上一次有效距离(cm)
 volatile uint32_t ic_rising = 0;
@@ -92,27 +90,32 @@ float Ultrasonic_Distance(void)
 }
 
 //超声波避障
-void Ultrasonic_Run(void)
+void Ultrasonic_Run(uint16_t distance)
 {
-    //大于30cm还可以往前走
-    if(distance > 30)
-    {
+    static uint8_t last_dir = 0;   // 0:左  1:右
+    if (distance > 30) {
+        // 距离远 → 全速
+        Car_SetSpeed(80);
         Move_Forward();
-    }
-    //小于30cm还可以往后退
-    if(distance <= 30 && distance > 7)
-    {
+    } else if (distance > 15) {
+        // 中距 → 减速 40%
+        Car_SetSpeed(40);
+        Move_Forward();
+    } else if (distance > 7) {
+        // 近距 → 倒车
+        Car_SetSpeed(60);
         Move_Backward();
-    }
-    
-    //慢慢转避让
-    if(distance <= 7)
-    { 
-        Clockwise_Rotation();
-        Delay_ms(100);
-        
+    } else {
+        // 危险区 → 交替转向
         Car_Stop();
-        Delay_ms(500);  
+        if (last_dir) {
+            Turn_Left();
+            last_dir = 0;
+        } else {
+            Turn_Right();
+            last_dir = 1;
+        }
+        Delay_ms(300);
     }
 }
 

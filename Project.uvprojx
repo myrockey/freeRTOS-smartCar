@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.\Start;.\Library;.\System;.\Hardware;.\User;.\FreeRTOS\include;.\FreeRTOS\port;.\FreeRTOS\src;.\User\usart;.\FreeRTOS\port\RVDS\ARM_CM3;.\User\led;.\User\Key;.\User\Bluetooth</IncludePath>
+              <IncludePath>.\Start;.\Library;.\System;.\Hardware;.\User;.\FreeRTOS\include;.\FreeRTOS\port;.\FreeRTOS\src;.\FreeRTOS\port\RVDS\ARM_CM3</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

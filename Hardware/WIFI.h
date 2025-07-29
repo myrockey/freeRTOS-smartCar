@@ -1,6 +1,10 @@
 #ifndef __WIFI_H
 #define __WIFI_H
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "event_groups.h"
+
 #include "globals.h"
 #include "Serial.h"
 
@@ -31,13 +35,14 @@
 #define MQTT_RETAIN 0 //0-不保留信息
 
 #define WIFI_RX_BUFFER_SIZE 1024 //wifi接收数据缓存
-#define CMD_BUFFER_SIZE 256
+#define CMD_BUFFER_SIZE 128
 
-extern volatile char WIFI_CONNECT;//服务器连接模式，1-表示已连接，0表示未连接
-extern volatile char PING_MODE;//ping心跳包发送模式，1表示开启30s发送模式，0表示未开启发送或开启2s快速发送模式。
+extern EventGroupHandle_t Event_Handle;
+extern const int WIFI_CONNECT;//服务器连接模式，1-表示已连接，0表示未连接
+extern const int PING_MODE;//ping心跳包发送模式，1表示开启30s发送模式，0表示未开启发送或开启2s快速发送模式。
 extern volatile char pingFlag;       //ping报文状态       0：正常状态，等待计时时间到，发送Ping报文
                          //ping报文状态       1：Ping报文已发送，当收到 服务器回复报文的后 将1置为0
-extern uint8_t WIFI_Receive_Flag;// WIFI接收到数据标志
+
 extern uint8_t g_rx_esp8266_buf[WIFI_RX_BUFFER_SIZE];
 extern volatile uint32_t g_rx_esp8266_cnt;// 当前接收的字节数
 

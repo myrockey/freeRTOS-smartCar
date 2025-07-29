@@ -2,6 +2,7 @@
 #define __SMARTCAR_H
 
 void SmartCar_Init(void);
+void Car_SetSpeed(uint8_t percent);//设置小车速度0-100
 //向前
 void Move_Forward(void);
 //向后

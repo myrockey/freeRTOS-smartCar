@@ -21,6 +21,10 @@
         "ringbuff.h": "c",
         "servo.h": "c",
         "voiceidentify.h": "c",
-        "ir_nec.h": "c"
+        "ir_nec.h": "c",
+        "task.h": "c",
+        "event_groups.h": "c",
+        "semphr.h": "c",
+        "motor.h": "c"
     }
 }

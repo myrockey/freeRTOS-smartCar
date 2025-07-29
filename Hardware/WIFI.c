@@ -5,11 +5,15 @@
 #include "Delay.h"
 #include "Serial.h"
 
-volatile char WIFI_CONNECT = 0;//服务器连接模式，1-表示已连接，0表示未连接
-volatile char PING_MODE = 0;//ping心跳包发送模式，1表示开启30s发送模式，0表示未开启发送或开启2s快速发送模式。
+extern TaskHandle_t WIFI_Receive_Task_Handle;
+extern TaskHandle_t WIFI_Task_Handle;
+
+EventGroupHandle_t Event_Handle = NULL;//事件标志组(位0：wifi连接状态，位1：ping心跳包2s快速发送模式)
+const int WIFI_CONNECT = (0x01 << 0);//设置事件掩码的位0，服务器连接模式，1-表示已连接，0表示未连接
+const int PING_MODE = (0x01 << 1);//设置事件掩码的位1，ping心跳包发送模式，1表示开启30s发送模式，0表示未开启发送或开启2s快速发送模式。
 volatile char pingFlag = 0;       //ping报文状态       0：正常状态，等待计时时间到，发送Ping报文
                          //ping报文状态       1：Ping报文已发送，当收到 服务器回复报文的后 将1置为0
-uint8_t WIFI_Receive_Flag = 0;// WIFI接收到数据标志
+
 uint8_t g_rx_esp8266_buf[WIFI_RX_BUFFER_SIZE] = {0};
 volatile uint32_t g_rx_esp8266_cnt = 0;// 当前接收的字节数
 
@@ -293,6 +297,12 @@ char ESP8266_MQTT_Subscribe(void) {
 /* USART2中断函数 */
 void ESP8266_IRQHandler(void)
 {
+	uint32_t ulReturn;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    
+    /* 进入临界段 */
+    ulReturn = taskENTER_CRITICAL_FROM_ISR();
+
     // 处理空闲中断
      if(USART_GetITStatus(ESP8266_USARTX, USART_IT_IDLE) != RESET)
     {
@@ -308,7 +318,8 @@ void ESP8266_IRQHandler(void)
         
         if(g_rx_dma_cnt > 0)
         {
-            if (WIFI_CONNECT == 0)
+			if ((xEventGroupGetBitsFromISR(Event_Handle) & 0x01) == 0)
+            //if (WIFI_CONNECT == 0)
             {
                 // 未连接服务器时的数据处理
                 if(g_rx_dma_cnt < USART2_DMA_RX_BUFFER_SIZE)
@@ -336,13 +347,24 @@ void ESP8266_IRQHandler(void)
                 TIM_SetCounter(WIFI_TIM, 0);
 
                 // 通知接收任务处理数据
-                WIFI_Receive_Flag = 1;
+				if(WIFI_Receive_Task_Handle != NULL)
+                {
+                    vTaskNotifyGiveFromISR(WIFI_Receive_Task_Handle, &xHigherPriorityTaskWoken);
+                }
             }
         }
         
         // 重新设置DMA传输数量并启动DMA
         USART2_RX_DMA_CHANNEL->CNDTR = USART2_DMA_RX_BUFFER_SIZE;
         DMA_Cmd(USART2_RX_DMA_CHANNEL, ENABLE);
+    }
+
+	/* 退出临界段 */
+    taskEXIT_CRITICAL_FROM_ISR(ulReturn);
+    
+    if(xHigherPriorityTaskWoken){
+      // 如果需要进行任务切换，在中断退出时进行切换
+      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 }
 
@@ -366,7 +388,7 @@ void WIFI_TIM_IRQHandler(void)
 					break;
 			case 1:							//如果pingFlag等于1，说明上一次发送到的ping报文，没有收到服务器回复，所以1没有被清除为0，可能是连接异常，我们要启动快速ping模式
 					TIM_WIFI_ENABLE_2S(); 	//我们将定时器6设置为2s定时,快速发送Ping报文
-					PING_MODE = 0;//关闭发送PING包的定时器3，设置事件标志位
+					xEventGroupClearBitsFromISR(Event_Handle, PING_MODE);//关闭发送PING包的定时器3，设置事件标志位
 					ESP8266_CheckMQTTStatus();			//添加Ping报文到发送缓冲区  
 					break;
 			case 2:							//如果pingFlag等于2，说明还没有收到服务器回复
@@ -375,9 +397,8 @@ void WIFI_TIM_IRQHandler(void)
 					ESP8266_CheckMQTTStatus();  		//添加Ping报文到发送缓冲区 
 					break;
 			case 5:							//如果pingFlag等于5，说明我们发送了多次ping，均无回复，应该是连接有问题，我们重启连接
-					WIFI_CONNECT = 0;       //连接状态置0，表示断开，没连上服务器
+					xTaskResumeFromISR(WIFI_Task_Handle);        //连接状态置0，表示断开，没连上服务器
 					TIM_Cmd(WIFI_TIM, DISABLE); //关TIM3 				
-					PING_MODE = 0;			//关闭发送PING包的定时器3，清除事件标志位
 					break;			
 		}
 		pingFlag++;           		   		//pingFlag自增1，表示又发送了一次ping，期待服务器的回复

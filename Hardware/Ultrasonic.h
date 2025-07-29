@@ -14,7 +14,7 @@
 
 void Ultrasonic_Init(void);
 float Ultrasonic_Distance(void);
-void Ultrasonic_Run(void);
+void Ultrasonic_Run(uint16_t distance);
 
 #endif
 
