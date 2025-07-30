@@ -55,8 +55,6 @@ QueueHandle_t  xCmdQueue;        // 串口/红外/语音 → 统一命令
 QueueHandle_t  xUltraQueue;      // 超声波采样结果
 QueueHandle_t  xTrackingQueue;   // 循迹线数据
 
-EventGroupHandle_t xCarEvent;//小车控制事件
-
 /*	二值信号量句柄                         
  *	作用：用于控制MQTT命令缓冲处理任务，在MQTT数据接收发送缓冲处理任务中发出
  *		  当命令缓冲区收到命令数据时，发出信号量		 
@@ -162,7 +160,6 @@ int main(void)
     xCmdQueue      = xQueueCreate(16, sizeof(uint8_t));
     xUltraQueue    = xQueueCreate(1, sizeof(uint16_t));
     xTrackingQueue = xQueueCreate(1, sizeof(uint8_t));
-    xCarEvent      = xEventGroupCreate();
 
 	/* 创建 AppTaskCreate 任务 */
 	xReturn = xTaskCreate((TaskFunction_t)AppTaskCreate,/* 任务函数 */
@@ -338,94 +335,94 @@ static void BSP_Init(void)
 /* -------------- 本地命令解释器 -------------- */
 static void Exec_Command(uint8_t cmd)
 {
+	uint16_t distance;
+	uint8_t line;
     switch (cmd)
     {
-	// 控制小车方向
-	case TYPE_FORWARD:
-		Move_Forward();
-		strcpy(str, "forword ");
-		break;
-	case TYPE_BACKWORD:
-		Move_Backward();
-		strcpy(str, "backword");
-		break;
-	case TYPE_STOP:
-		Car_Stop();
-		strcpy(str, "  stop  ");
-		break;
-	case TYPE_LEFT:
-		Turn_Left();
-		strcpy(str, "  left  ");
-		break;
-	case TYPE_RIGHT:
-		Turn_Right();
-		strcpy(str, " right  ");
-		break;
-	case TYPE_CLOCKWISE_ROTATION://顺时针旋转
-		Clockwise_Rotation();
-		strcpy(str, " cycle  ");
-		break;
-	case TYPE_COUNTERCLOCKWISE_ROTATION://逆时针旋转
-		CounterClockwise_Rotation();
-		strcpy(str, " Ncycle ");
-		break;
-	// 控制舵机转向
-	case TYPE_SERVO_0://Servo 0
-		strcpy(str, "servo 0 ");
-		Servo_SetAngle(0);
-		break;
-	case TYPE_SERVO_45://Servo 45
-		strcpy(str, "servo 45");
-		Servo_SetAngle(45);
-		break;
-	case TYPE_SERVO_90://Servo 90
-		strcpy(str, "servo 90");
-		Servo_SetAngle(90);
-		break;
-	case TYPE_SERVO_135://Servo 135
-		strcpy(str, "servo135");
-		Servo_SetAngle(135);
-		break;
-	case TYPE_SERVO_180://Servo 180
-		strcpy(str, "servo180");
-		Servo_SetAngle(180);
-		break;
-	// LED ON/OFF
-    case TYPE_LED_ON:
-        LED1_ON;
-        strcpy(str, " led on ");
-        break;
-    case TYPE_LED_OFF:
-        LED1_OFF;
-        strcpy(str, " led off");
-        break;
-	// 读取温度并上报
-    case TYPE_READ_DHT11:
-        xSemaphoreGive(BinarySemaphore);	     //给出二值信号量，控制发送任务执行
-		strcpy(str, " dht11  ");
-        break;
-	case TYPE_ULTRASONIC_DISTANCE: // 超声波测距
-		uint16_t distance;
-		if (xQueuePeek(xUltraQueue, &distance, 0) == pdPASS)
-        {
-            OLED_ShowNum(2,4,distance,3);
-        }
-	    strcpy(str, "distance");
-		break;
-	case TYPE_TRACKING: //自动循迹
-		uint8_t line;
-		if (xQueuePeek(xTrackingQueue, &line, 0) == pdPASS)
-        {
-            OLED_ShowNum(3,4,line,3);
-        }
-		strcpy(str, "tracking");
-		break;
-	case TYPE_ULTRASONIC_OBSTACLE: // 自动避障
-		strcpy(str, "obstacle");
-        break;
-    default:
-        strcpy(str, " unknown");
-        break;
+		// 控制小车方向
+		case TYPE_FORWARD:
+			Move_Forward();
+			strcpy(str, "forword ");
+			break;
+		case TYPE_BACKWORD:
+			Move_Backward();
+			strcpy(str, "backword");
+			break;
+		case TYPE_STOP:
+			Car_Stop();
+			strcpy(str, "  stop  ");
+			break;
+		case TYPE_LEFT:
+			Turn_Left();
+			strcpy(str, "  left  ");
+			break;
+		case TYPE_RIGHT:
+			Turn_Right();
+			strcpy(str, " right  ");
+			break;
+		case TYPE_CLOCKWISE_ROTATION://顺时针旋转
+			Clockwise_Rotation();
+			strcpy(str, " cycle  ");
+			break;
+		case TYPE_COUNTERCLOCKWISE_ROTATION://逆时针旋转
+			CounterClockwise_Rotation();
+			strcpy(str, " Ncycle ");
+			break;
+		// 控制舵机转向
+		case TYPE_SERVO_0://Servo 0
+			strcpy(str, "servo 0 ");
+			Servo_SetAngle(0);
+			break;
+		case TYPE_SERVO_45://Servo 45
+			strcpy(str, "servo 45");
+			Servo_SetAngle(45);
+			break;
+		case TYPE_SERVO_90://Servo 90
+			strcpy(str, "servo 90");
+			Servo_SetAngle(90);
+			break;
+		case TYPE_SERVO_135://Servo 135
+			strcpy(str, "servo135");
+			Servo_SetAngle(135);
+			break;
+		case TYPE_SERVO_180://Servo 180
+			strcpy(str, "servo180");
+			Servo_SetAngle(180);
+			break;
+		// LED ON/OFF
+		case TYPE_LED_ON:
+			LED1_ON;
+			strcpy(str, " led on ");
+			break;
+		case TYPE_LED_OFF:
+			LED1_OFF;
+			strcpy(str, " led off");
+			break;
+		// 读取温度并上报
+		case TYPE_READ_DHT11:
+			xSemaphoreGive(BinarySemaphore);	     //给出二值信号量，控制发送任务执行
+			strcpy(str, " dht11  ");
+			break;
+		case TYPE_ULTRASONIC_DISTANCE: // 超声波测距
+			if (xQueuePeek(xUltraQueue, &distance, 0) == pdPASS)
+			{
+				OLED_ShowNum(2,4,distance,3);
+			}
+			strcpy(str, "distance");
+			break;
+		case TYPE_TRACKING: //自动循迹
+			if (xQueuePeek(xTrackingQueue, &line, 0) == pdPASS)
+			{
+				OLED_ShowNum(3,4,line,3);
+			}
+			strcpy(str, "tracking");
+			break;
+		case TYPE_ULTRASONIC_OBSTACLE: // 自动避障
+			strcpy(str, "obstacle");
+			break;
+		default:
+			strcpy(str, " unknown");
+			break;
     }
 
     /* 显示到 OLED */
@@ -633,7 +630,6 @@ void CarCtrl_Task(void * pvParameters)
 	uint16_t distance;
     uint8_t  line;
     uint8_t  cmd;        // 来自队列的远程指令
-    EventBits_t uxBits;
 	
 	/* 最近一次保持某状态的最短时间，防止抖动 */
     const TickType_t state_hold = pdMS_TO_TICKS(200);
@@ -645,7 +641,7 @@ void CarCtrl_Task(void * pvParameters)
     static uint32_t dbg_cnt = 0;
     if (++dbg_cnt % 25 == 0)   // 每 25*20 ms ≈ 0.5 s 打印一次
     {
-        printf("[DBG] st=%u  d=%u mm  ln=0b%03b\n",
+        printf("[DBG] st=%d  d=%u mm  ln=%d\n",
                car_state, distance, line);
     }
 #endif
@@ -660,35 +656,35 @@ void CarCtrl_Task(void * pvParameters)
 		/* 1. 更新传感器数据 */
         xQueuePeek(xUltraQueue,    &distance, 0);
         xQueuePeek(xTrackingQueue, &line,     0);
-        uxBits = xEventGroupGetBits(xCarEvent);
 
         /* 2. 状态机主逻辑 */
         TickType_t now = xTaskGetTickCount();
+		static uint8_t last_dir = 0;
 		switch (car_state)
         {
 			case CAR_RUN:
-				if (distance < DANGER_DISTANCE_CM)
+				if (distance < DANGER_DISTANCE_CM) // < 7
 				{
 					/* 直接进入危险区：先停车，再决定转向 */
 					Car_Stop();
 					car_state      = CAR_AVOID_TURN;
 					state_enter_tick = now;
 				}
-				else if (distance < BACK_DISTANCE_CM)
+				else if (distance < BACK_DISTANCE_CM) // 7 - 15
 				{
 					Car_SetSpeed(SPD_BACK);
 					Move_Backward();
 					car_state      = CAR_AVOID_BACK;
 					state_enter_tick = now;
 				}
-				else if (distance < SLOW_DISTANCE_CM)
+				else if (distance < SLOW_DISTANCE_CM) // 15 - 30
 				{
 					Car_SetSpeed(SPD_SLOW);
 					Move_Forward();
 					car_state      = CAR_AVOID_SLOW;
 					state_enter_tick = now;
 				}
-				else
+				else // > 30
 				{
 					/* 正常循迹 */
 					Car_SetSpeed(SPD_CRUISE);  // 补上这句
@@ -728,18 +724,19 @@ void CarCtrl_Task(void * pvParameters)
 
 			case CAR_AVOID_TURN:
 				/* 危险区：左右交替转向 */
-				static uint8_t last_dir = 0;
 				if ((now - state_enter_tick) >= pdMS_TO_TICKS(TURN_PULSE_MS))
 				{
 					last_dir ^= 1;
 					Car_SetSpeed(SPD_TURN);
 					if (last_dir)
 					{
-						Turn_Right();
+						//Turn_Right();
+						Clockwise_Rotation();//顺时针旋转
 					}
 					else
 					{
-						Turn_Left();
+						//Turn_Left();
+						CounterClockwise_Rotation();//逆时针旋转
 					}
 					state_enter_tick = now;
 

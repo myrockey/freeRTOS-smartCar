@@ -3,6 +3,8 @@
 
 void SmartCar_Init(void);
 void Car_SetSpeed(uint8_t percent);//设置小车速度0-100
+void Car_SetLeftSpeed(int8_t speed);// 设置左车轮速度
+void Car_SetRightSpeed(int8_t speed);// 设置右车轮速度
 //向前
 void Move_Forward(void);
 //向后

@@ -2,6 +2,10 @@
 #include "SmartCar.h"
 #include "Delay.h"
 
+#define CLAMP(x, lo, hi)  ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
+#define KP  25   // 比例系数：蛇形→减小，转弯不足→加大
+#define BASE 50  // 基本速度：赛道直→提高，弯急→降低
+
 //3路寻迹模块
 void Tracking_Init(void)
 {
@@ -48,60 +52,30 @@ uint8_t Tracking_Read(void)
 */
 void Tracking_Run(uint8_t line)
 {
-  switch (line)
-  {
-    case 101: 
-      Move_Forward(); 
-      break; // 101 正中直行
-    case 11: 
-      Turn_Left(); 
-      break; // 011 偏右小左转
-    case 110: 
-      Turn_Right();
-      break; // 110 偏左小右转
-    case 1: 
-      Clockwise_Rotation(); 
-      break; // 001 最左大右转
-    case 100: 
-      CounterClockwise_Rotation();
-      break; // 100 最右大左转
-    case 0:
-    case 111: 
-      Car_Stop(); 
-      break; // 000 或 111 脱线停车
-    default  : 
-      Car_SetSpeed(40);
-      Move_Forward(); 
-      break; // 其余缓行
-  }
-}
-
-void Tracking_Run2(uint8_t line)
-{
-    const int8_t kp = 25;   // PID 比例系数，现场微调
-    const int8_t base = 50;
-
     /* 1. 把线值映射成误差 [-3, 3]：0b001->-3 … 0b101->0 … 0b100->+3 */
     int8_t err;
     switch (line)
     {
-        case 0b001: err = -3; break;   // 最左
-        case 0b011: err = -2; break;   // 偏左
-        case 0b010: err = -1; break;   // 略左
-        case 0b101: err =  0; break;   // 正中
-        case 0b110: err =  1; break;   // 略右
-        case 0b100: err =  2; break;   // 偏右
-        default:    err =  0; break;   // 丢线或全黑
+        case 1: err = -3; break;     // 最左 0b001
+        case 11: err = -2; break;    // 偏左 0b011
+        case 10: err = -1; break;    // 略左 0b010 3路循迹这个case理论上不会出现
+        case 101: err =  0; break;   // 正中 0b101
+        case 110: err =  1; break;   // 略右 0b110
+        case 100: err =  2; break;   // 偏右 0b100
+        default:   
+          Car_SetLeftSpeed(0);
+          Car_SetRightSpeed(0);
+          return; // 丢线或全黑 0b000 0b111
     }
 
     /* 2. 计算差速 */
-    int8_t diff = kp * err;
-    int8_t left  = base + diff;
-    int8_t right = base - diff;
+    int8_t diff = KP * err;
+    int8_t left  = BASE + diff;
+    int8_t right = BASE - diff;
 
-    /* 3. 限幅 0-100 */
-    left  = left  < 0 ? 0 : (left  > 100 ? 100 : left);
-    right = right < 0 ? 0 : (right > 100 ? 100 : right);
+    /* 3. 限幅 -100-100 */
+    left  = CLAMP(BASE + diff, -100, 100);
+    right = CLAMP(BASE - diff, -100, 100);
 
     /* 4. 直接驱动左右轮 */
     Car_SetLeftSpeed(left);

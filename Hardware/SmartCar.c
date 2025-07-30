@@ -2,7 +2,7 @@
 #include "SmartCar.h"
 #include "Motor.h"
 
-int8_t Speed = 50;
+static int8_t Speed = 50;
 /**
   * 函    数：初始化
   * 参    数：无
@@ -13,17 +13,18 @@ void SmartCar_Init(void)
 	Motor_Init();
 }
 
-//设置小车速度0-100
+// 设置小车速度0-100
 void Car_SetSpeed(uint8_t percent)
 {
 	Speed = percent;
 }
 
+// 设置做车轮速度
 void Car_SetLeftSpeed(int8_t speed)
 {
 	MotorLeft_SetSpeed(speed);
 }
-
+// 设置右车轮速度
 void Car_SetRightSpeed(int8_t speed)
 {
 	MotorRight_SetSpeed(speed);
@@ -46,7 +47,6 @@ void Move_Backward(void)
 //停止
 void Car_Stop(void)
 {
-	Car_SetSpeed(50);
 	MotorLeft_SetSpeed(0);
 	MotorRight_SetSpeed(0);
 }
